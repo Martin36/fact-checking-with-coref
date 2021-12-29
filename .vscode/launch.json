@@ -1,0 +1,60 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: Current File",
+      "type": "python",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "env": {"PYTHONPATH":"${workspaceRoot}"},  // modify PYTHONPATH
+    },
+    {
+      // TODO: Fix and test this
+      "name": "Train: Retrieve documents",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/athene/retrieval/document/docment_retrieval.py",
+      "console": "integratedTerminal",
+      "args": [
+        "--db-file=/home/martin/fever-2018-team-athene/data/fever/fever.db",
+        "--in-file=/home/martin/fever-2018-team-athene/data/fever-data/train.jsonl",
+        "--out-file=/home/martin/fever-2018-team-athene/data/fever/train.wiki3.jsonl",
+        "--k-wiki=3",
+        "--parallel=False",
+
+      ]
+    },
+    {
+      // TODO: Fix and test this
+      "name": "Dev: Retrieve documents",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/athene/retrieval/document/docment_retrieval.py",
+      "console": "integratedTerminal",
+      "args": [
+        "--db-file=/home/martin/fever-2018-team-athene/data/fever/fever.db",
+        "--in-file=/home/martin/fever-2018-team-athene/data/fever-data/dev.jsonl",
+        "--out-file=/home/martin/fever-2018-team-athene/data/fever/dev.wiki3.jsonl",
+        "--k-wiki=3",
+        // "--parallel=False",
+      ]
+    },
+    {
+      "name": "Dev: Eval Document Retrieval",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/evaluation.py",
+      "console": "integratedTerminal",
+      "args": [
+        "--in-file=data/fever/dev.wiki3.jsonl",
+        "--out-file=data/fever/dev.wiki3.eval.json",
+        "--type=document_retrieval"
+        // "--parallel=False",
+      ]
+    },
+  ]
+}
