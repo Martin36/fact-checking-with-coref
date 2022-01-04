@@ -1,6 +1,16 @@
-import bz2, glob, json, re
+import bz2, glob, json, re, pprint
 from typing import List
+from collections import defaultdict
 from src.data.doc_db import DocDB
+from tqdm import tqdm
+
+pp = pprint.PrettyPrinter(indent=2)
+
+
+def count_files(base_path):
+  file_path = base_path + "/**/*.bz2"
+  paths = glob.glob(file_path, recursive=True)
+  return len(paths)
 
 
 def data_loader(base_path):
@@ -60,19 +70,42 @@ def convert_lines_to_text(paragraphs: List[List[str]]):
 
 if __name__ == "__main__":
   db_path = "data/hover/wiki_wo_links.db"
-  db = DocDB(db_path=db_path)
-  
-  bz2_file = "data/hover/enwiki/AA/wiki_00.bz2"
-
+  new_db_path = "data/hover/wiki_with_lines.db"
   base_path = "data/hover/enwiki"
+
+  db = DocDB(db_path=db_path)
+  new_db = DocDB(db_path=new_db_path)
   
-  for docs in data_loader(base_path):
+  # new_db.drop_documents_table()
+  new_db.create_documents_table()
+  
+  nr_of_files = count_files(base_path)
+  
+  for idx, docs in enumerate(tqdm(data_loader(base_path), total=nr_of_files)):
+    doc_titles = []
+    doc_texts = []
+    doc_lines = []
+    
+    # if idx < 9635:
+    #   continue
+    
     for doc in docs:
+      doc_text = db.get_doc_text(doc["title"])      
+      if not doc_text:
+        # print(f"Doc {doc['title']} not found")
+        continue
+        
       lines_text = convert_lines_to_text(doc["text"])
-      
-      db.store_doc_lines(doc["title"], lines_text)
-      
-      print(doc)
-  
-  
+
+      # new_db.insert_doc_with_lines(doc["title"], doc_text, lines_text)
+
+      doc_titles.append(doc["title"])
+      doc_texts.append(doc_text)
+      doc_lines.append(lines_text)
+            
+    # doc_texts = db.get_multiple_docs_text(doc_titles)
+    
+    new_db.insert_docs_with_lines(doc_titles, doc_texts, doc_lines)
+          
+  print(f"Finished creating DB '{new_db_path}'")
 

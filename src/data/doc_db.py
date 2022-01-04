@@ -7,6 +7,7 @@
 """Documents, in a sqlite database."""
 
 import sqlite3
+from typing import List
 import unicodedata
 
 
@@ -59,6 +60,17 @@ class DocDB(object):
         cursor.close()
         return result if result is None else result[0]
     
+    def get_multiple_docs_text(self, doc_ids):
+        """Fetch the raw text of the docs in 'doc_ids'."""
+        cursor = self.connection.cursor()
+        doc_ids = [normalize(doc_id) for doc_id in doc_ids]
+        sql = "SELECT text FROM documents WHERE id IN ({0})".format(
+            ", ".join("?" for _ in doc_ids))
+        cursor.execute(sql, doc_ids)
+        results = [r[0] for r in cursor.fetchall()]
+        cursor.close()
+        return results        
+    
     def get_doc_lines(self, doc_id):
         """Fetch the raw text of the doc for 'doc_id'."""
         cursor = self.connection.cursor()
@@ -80,7 +92,7 @@ class DocDB(object):
         cursor.execute(sql)
         cursor.close()
     
-    def store_doc_lines(self, doc_id, lines):
+    def store_doc_lines(self, doc_id: str, lines: str):
         """Stores the Wiki article lines in the DB"""
         cursor = self.connection.cursor()
         sql = """
@@ -88,5 +100,75 @@ class DocDB(object):
             SET lines = ?
             WHERE id = ?
         """
-        cursor.execute(sql, (lines, doc_id))
+        cursor.execute(sql, (lines, normalize(doc_id)))
+        self.connection.commit()
         cursor.close()
+
+    # TODO: This does not work 
+    def store_multiple_doc_lines(self, doc_ids: List[str], lines: List[str]):
+        """Stores the Wiki article lines in the DB"""
+        doc_ids = [normalize(doc_id) for doc_id in doc_ids]
+        doc_id_lines_tuples = list(zip(doc_ids, lines))
+        cursor = self.connection.cursor()
+        sql = """
+            UPDATE documents
+            SET lines = ?
+            WHERE id = ?
+        """
+        cursor.executemany(sql, doc_id_lines_tuples)
+        self.connection.commit()
+        cursor.close()
+
+    def count_docs_with_lines(self):
+        cursor = self.connection.cursor()
+        sql = "SELECT COUNT(*) FROM documents WHERE lines NOTNULL"
+        cursor.execute(sql)
+        result = cursor.fetchall()
+        cursor.close()
+        return result
+    
+    def create_documents_table(self):
+        cursor = self.connection.cursor()
+        sql = """
+            CREATE TABLE IF NOT EXISTS documents
+            (id PRIMARY KEY, text, lines)
+        """
+        cursor.execute(sql)
+        self.connection.commit()
+        cursor.close()
+        
+    def drop_documents_table(self):
+        cursor = self.connection.cursor()
+        sql = """
+            DROP TABLE IF EXISTS documents
+        """
+        cursor.execute(sql)
+        self.connection.commit()
+        print("'documents' table dropped")
+        cursor.close()
+        
+    
+    def insert_docs_with_lines(self, ids, texts, lines):
+        """Stores Wiki articles with lines in the DB"""
+        ids = [normalize(id) for id in ids]
+        doc_tuples = list(zip(ids, texts, lines))
+        cursor = self.connection.cursor()
+        sql = """
+            INSERT OR IGNORE INTO documents
+            VALUES (?, ?, ?)
+        """
+        cursor.executemany(sql, doc_tuples)
+        self.connection.commit()
+        cursor.close()
+        
+    def insert_doc_with_lines(self, id, text, lines):
+        """Stores the Wiki article with lines in the DB"""
+        cursor = self.connection.cursor()
+        sql = """
+            INSERT OR IGNORE INTO documents
+            VALUES (?, ?, ?)
+        """
+        cursor.execute(sql, (normalize(id), text, lines))
+        self.connection.commit()
+        cursor.close()
+        
