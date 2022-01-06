@@ -1,4 +1,9 @@
 
+from collections import defaultdict
+from typing import List
+
+
+stats = defaultdict(int)
 
 def encode_fever_text(input: str):
   output = input.replace('( ', '-LRB-')
@@ -10,6 +15,7 @@ def encode_fever_text(input: str):
   output = output.replace(' ', '_')
   return output
 
+
 def decode_fever_text(input: str):
   output = input.replace('-LRB-', '( ')
   output = output.replace('-RRB-', ' )')
@@ -19,3 +25,16 @@ def decode_fever_text(input: str):
   output = output.replace("'s", " 's")
   output = output.replace('_', ' ')
   return output
+
+
+def create_input_str(claim: str, evidence_texts: List[str]):
+  result = f"{claim} "
+  if len(evidence_texts) > 1:
+    stats["multiple_evidence"] += 1
+  evidence_texts = evidence_texts[0]  # TODO: What if there is multiple evidence sets?
+  evidence_str_list = [f"{decode_fever_text(evi[0])} {evi[1]}" 
+                      for evi in evidence_texts]
+  evidence_concat = " [SEP] ".join(evidence_str_list)
+  result += f"[SEP] {evidence_concat}"
+  return result    
+    

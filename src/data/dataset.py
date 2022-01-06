@@ -1,39 +1,32 @@
 import random, itertools
 from utils_package import util_funcs
 from numpy import random
-
+from torch.utils.data import Dataset
 from src.data.doc_db import DocDB
 
-
-class Dataset():
-  def __init__(self, db_path, batch_size=32) -> None:
-    self.train_data = None
-    self.dev_data = None
-    self.test_data = None
+# TODO: is it possible to make this abstract?
+class BaseDataset(Dataset):
+  def __init__(self, data_file, db_path, tokenizer, batch_size=32) -> None:
+    self.load_data(data_file)
     self.db = DocDB(db_path=db_path)
+    self.tokenizer = tokenizer
     self.batch_size = batch_size
   
 
-  def load_train_set(self, file_name):
-    if ".jsonl" in file_name:
-      self.train_data = util_funcs.load_jsonl(file_name)
-    elif ".json" in file_name:
-      self.train_data = util_funcs.load_json(file_name)
+  def __len__(self):
+    return len(self.data)
+  
+  
+  def __getitem__(self):
+    pass
   
 
-  def load_dev_set(self, file_name):
-    if ".jsonl" in file_name:
-      self.dev_data = util_funcs.load_jsonl(file_name)
-    elif ".json" in file_name:
-      self.dev_data = util_funcs.load_json(file_name)
-    
-
-  def load_test_set(self, file_name):
-    if ".jsonl" in file_name:
-      self.test_data = util_funcs.load_jsonl(file_name)
-    elif ".json" in file_name:
-      self.test_data = util_funcs.load_json(file_name)
-
+  def load_data(self, data_file):
+    if ".jsonl" in data_file:
+      self.data = util_funcs.load_jsonl(data_file)
+    elif ".json" in data_file:
+      self.data = util_funcs.load_json(data_file)
+  
 
   def get_random_samples(self, k):
     if self.train_data:
