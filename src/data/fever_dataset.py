@@ -1,13 +1,13 @@
-import pprint, random
+import pprint, random, torch, utils_package
 
-import torch
 from src.data.dataset import BaseDataset
 from typing import List, TypedDict
-from transformers import DebertaV2Tokenizer
+from tqdm import tqdm
 
 from src.utils.helpers import create_input_str
 
 pp = pprint.PrettyPrinter(indent=2)
+logger = utils_package.logger.get_logger()
 
 # FEVER to 'deberta-v2-xlarge-mnli' mapping
 label2id = {
@@ -27,7 +27,7 @@ class FeverDataSample(TypedDict):
 
 class FEVERDataset(BaseDataset):
   
-  def __init__(self, data_file, db_path, tokenizer) -> None:
+  def __init__(self, data_file, db_path, tokenizer=None) -> None:
     super().__init__(data_file, db_path, tokenizer)
       
 
@@ -84,26 +84,31 @@ class FEVERDataset(BaseDataset):
 
         
   def dev_data_generator(self):
-    random.shuffle(self.dev_data)
-    for d in self.dev_data:
+    random.shuffle(self.data)
+    for d in self.data:
       d["evidence_texts"] = self.get_evidence_texts(d)
       yield d
 
-      
+  
+  def create_ds_with_evidence_texts(self, out_file):
+    for d in tqdm(self.data):
+      d["evidence_texts"] = self.get_evidence_texts(d)
+    utils_package.store_jsonl(self.data, out_file)
+    logger.info(f"Stored dataset with evidence in '{out_file}'")
+    
       
 if __name__ == "__main__":
   
   data_file = "data/fever/dev.jsonl"
   db_path = "data/fever/fever.db"
-  model_name = "microsoft/deberta-v2-xlarge-mnli"
-  tokenizer = DebertaV2Tokenizer.from_pretrained(model_name)
-  dataset = FEVERDataset(db_path)
+
+  dataset = FEVERDataset(data_file, db_path)
   
-  dataset.load_dev_set("data/fever/dev.jsonl")
   random_samples = dataset.get_random_samples_with_text(5)
   
   pp.pprint(random_samples)
   
-  
+  out_file = "data/fever/dev_with_evidence.jsonl"
+  dataset.create_ds_with_evidence_texts(out_file)
       
     

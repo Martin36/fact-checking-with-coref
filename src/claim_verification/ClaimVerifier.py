@@ -34,11 +34,10 @@ label2id = {
 
 class ClaimVerifier():
   
-  def __init__(self, model_name, use_gpu) -> None:
+  def __init__(self, model_name, device) -> None:
     self.model = DebertaV2ForSequenceClassification.from_pretrained(model_name)
-    self.use_gpu = use_gpu
-    if use_gpu:
-      self.model.to_gpu()
+    self.device = device
+    self.model.to(device)    
     
     
   def predict(self, claim, evidence_texts, label_text):
@@ -54,6 +53,8 @@ class ClaimVerifier():
 
   def predict_batch(self, inputs, labels):
     with torch.no_grad():
+      inputs.to(self.device)
+      labels.to(self.device)
       labels = torch.squeeze(labels)
       outputs = self.model(**inputs, labels=labels)
       logits = outputs.logits
@@ -85,6 +86,7 @@ if __name__ == "__main__":
   model_name = "microsoft/deberta-v2-xlarge-mnli"
 
   device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+  print(device)
 
   tokenizer = DebertaV2Tokenizer.from_pretrained(model_name)
 
