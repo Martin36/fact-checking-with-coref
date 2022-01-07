@@ -38,3 +38,17 @@ def create_input_str(claim: str, evidence_texts: List[str]):
   result += f"[SEP] {evidence_concat}"
   return result    
     
+
+def tensor_dict_to_device(dict, device):
+  for key in dict:
+    dict[key] = dict[key].to(device)
+  return dict
+
+
+def calc_accuracy(pred_labels, gold_labels):
+  accuracy = 0
+  for pred, gold in zip(pred_labels, gold_labels):
+    if pred == gold:
+      accuracy += 1
+  accuracy /= len(pred_labels)
+  return accuracy

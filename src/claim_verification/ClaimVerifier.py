@@ -1,9 +1,11 @@
+import torch, utils_package
 from src.data.fever_dataset import FEVERDataset
-from src.utils.helpers import create_input_str
-from transformers import DebertaV2Tokenizer, DebertaV2ForSequenceClassification
-import torch
+from src.utils.helpers import calc_accuracy, create_input_str, tensor_dict_to_device
+from transformers import DebertaV2Tokenizer, DebertaV2ForSequenceClassification, DebertaTokenizer, DebertaForSequenceClassification
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+
+logger = utils_package.logger.get_logger()
 
 LABEL_2_IDX = {
   "SUPPORTS": 0, 
@@ -35,7 +37,8 @@ label2id = {
 class ClaimVerifier():
   
   def __init__(self, model_name, device) -> None:
-    self.model = DebertaV2ForSequenceClassification.from_pretrained(model_name)
+    # self.model = DebertaV2ForSequenceClassification.from_pretrained(model_name)
+    self.model = DebertaForSequenceClassification.from_pretrained(model_name)
     self.device = device
     self.model.to(device)    
     
@@ -53,9 +56,9 @@ class ClaimVerifier():
 
   def predict_batch(self, inputs, labels):
     with torch.no_grad():
-      inputs.to(self.device)
-      labels.to(self.device)
+      inputs = tensor_dict_to_device(inputs, self.device)
       labels = torch.squeeze(labels)
+      labels = labels.to(self.device)
       outputs = self.model(**inputs, labels=labels)
       logits = outputs.logits
       return logits
@@ -64,14 +67,7 @@ class ClaimVerifier():
   def convert_logits_to_labels(self, logits):
     out, idxs = torch.max(logits, dim=1)
     return idxs.tolist()
-  
-  def calc_accuracy(self, pred_labels, gold_labels):
-    accuracy = 0
-    for pred, gold in zip(pred_labels, gold_labels):
-      if pred == gold:
-        accuracy += 1
-    accuracy /= len(pred_labels)
-    return accuracy
+    
   
   def save_model(self, path):
     pass
@@ -83,16 +79,18 @@ if __name__ == "__main__":
   dev_data_path = "data/fever/dev.jsonl"
   # model_name = "microsoft/deberta-v2-xlarge"
   # model_name = "models/document-level-FEVER/RTE-debertav2-MNLI"
-  model_name = "microsoft/deberta-v2-xlarge-mnli"
-
+  # model_name = "microsoft/deberta-v2-xlarge-mnli"
+  model_name = "microsoft/deberta-base-mnli"
+  batch_size = 8
+  
   device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-  print(device)
 
-  tokenizer = DebertaV2Tokenizer.from_pretrained(model_name)
+  # tokenizer = DebertaV2Tokenizer.from_pretrained(model_name)
+  tokenizer = DebertaTokenizer.from_pretrained(model_name)
 
   fever_ds = FEVERDataset(dev_data_path, db_path, tokenizer)
   
-  dev_dataloader = DataLoader(fever_ds, batch_size=4, shuffle=True)
+  dev_dataloader = DataLoader(fever_ds, batch_size=batch_size, shuffle=True)
   
   claim_verifier = ClaimVerifier(model_name, device)
   
@@ -103,14 +101,9 @@ if __name__ == "__main__":
     pred_labels += claim_verifier.convert_logits_to_labels(logits)
     gold_labels += torch.squeeze(labels).tolist()
     
+  accuracy = calc_accuracy(pred_labels, gold_labels)
+  logger.info(f"Accuracy for model '{model_name}' on dev set is: {accuracy}")
 
-  for d in fever_ds.dev_data_generator():
-    if d["verifiable"] == "NOT VERIFIABLE":
-      continue
-    input_str = claim_verifier.create_input_str(d["claim"], d["evidence_texts"])
-    print(input_str)
-  
-  # for batch in fever_ds.get_dev_data_batch():
     
   
   
