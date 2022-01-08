@@ -1,29 +1,15 @@
 import pprint, random, torch, utils_package
 
 from src.data.dataset import BaseDataset
-from typing import List, TypedDict
 from tqdm import tqdm
 
-from src.utils.helpers import create_input_str
+from src.utils.helpers import create_input_str, get_fever_doc_lines
+from src.utils.types import FeverDataSample
+from src.utils.constants import label2id
 
 pp = pprint.PrettyPrinter(indent=2)
 logger = utils_package.logger.get_logger()
 
-# FEVER to 'deberta-v2-xlarge-mnli' mapping
-label2id = {
-  "REFUTES": 0,
-  "NOT ENOUGH INFO": 1,
-  "SUPPORTS": 2
-}
-
-
-class FeverDataSample(TypedDict):
-  id: int
-  claim: str
-  label: str
-  verifiable: str
-  evidence: List[List[List[str]]]
-  
 
 class FEVERDataset(BaseDataset):
   
@@ -66,8 +52,7 @@ class FEVERDataset(BaseDataset):
           break
         
         doc_lines_text = self.db.get_doc_lines(doc_id)
-        doc_lines = [doc_line.split("\t")[1] if len(doc_line.split("\t")[1]) > 1 else "" for doc_line in
-            doc_lines_text.split("\n")]
+        doc_lines = get_fever_doc_lines(doc_lines_text)
         
         evidence_set_texts.append([doc_id, doc_lines[sent_id]])
 

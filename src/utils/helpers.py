@@ -52,3 +52,8 @@ def calc_accuracy(pred_labels, gold_labels):
       accuracy += 1
   accuracy /= len(pred_labels)
   return accuracy
+
+
+def get_fever_doc_lines(doc_text):
+  return [doc_line.split("\t")[1] if len(doc_line.split("\t")[1]) > 1 else "" for doc_line in
+            doc_text.split("\n")]

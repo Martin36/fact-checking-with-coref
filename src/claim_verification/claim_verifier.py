@@ -4,6 +4,7 @@ from src.utils.helpers import calc_accuracy, create_input_str, tensor_dict_to_de
 from transformers import DebertaV2Tokenizer, DebertaV2ForSequenceClassification, DebertaTokenizer, DebertaForSequenceClassification
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+from sklearn.metrics import classification_report
 
 logger = utils_package.logger.get_logger()
 
@@ -104,6 +105,9 @@ if __name__ == "__main__":
   accuracy = calc_accuracy(pred_labels, gold_labels)
   logger.info(f"Accuracy for model '{model_name}' on dev set is: {accuracy}")
 
+  target_names = list(label2id.keys())
+  cls_report = classification_report(gold_labels, pred_labels, target_names=target_names)
+  print(cls_report)
     
   
   
