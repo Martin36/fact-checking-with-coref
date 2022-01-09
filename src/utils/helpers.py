@@ -57,3 +57,10 @@ def calc_accuracy(pred_labels, gold_labels):
 def get_fever_doc_lines(doc_text):
   return [doc_line.split("\t")[1] if len(doc_line.split("\t")[1]) > 1 else "" for doc_line in
             doc_text.split("\n")]
+
+
+def get_evidence_pages(evidence_sents: List[List[str]]):
+  doc_titles = set()
+  for evi in evidence_sents:
+    doc_titles.add(evi[2])
+  return doc_titles

@@ -6,16 +6,11 @@ from utils_package.logger import get_logger
 
 from src.data.doc_db import DocDB
 from src.data.fever_dataset import FeverDataSample
-from src.utils.helpers import get_fever_doc_lines
+from src.utils.helpers import get_evidence_pages, get_fever_doc_lines
 from src.utils.types import DocumentLevelFever
 
 logger = get_logger()
 
-def get_evidence_pages(evidence_sents: List[List[str]]):
-  doc_titles = set()
-  for evi in evidence_sents:
-    doc_titles.add(evi[2])
-  return doc_titles
     
     
 def filter_empty_sents(d: DocumentLevelFever):
