@@ -8,7 +8,7 @@ from utils_package.util_funcs import load_jsonl, store_json, store_jsonl
 from utils_package.logger import get_logger
 
 from src.data.doc_db import DocDB
-from src.utils.helpers import get_evidence_pages, get_fever_doc_lines, get_random_from_list
+from src.utils.helpers import get_evidence_pages, get_fever_doc_lines, get_non_empty_indices, get_random_from_list
 from src.utils.types import DocRetrievalResult, DocumentLevelFever
 
 logger = get_logger()
@@ -18,8 +18,7 @@ stats = defaultdict(int)
     
 
 def filter_empty_sents(d: DocumentLevelFever):
-  non_empty_sents_indices = [i for i, sent in enumerate(d["sentences"]) 
-                             if len(sent) > 0]
+  non_empty_sents_indices = get_non_empty_indices(d["sentences"])
   d["sentences"] = [d["sentences"][i] for i in non_empty_sents_indices]
   d["label_list"] = [d["label_list"][i] for i in non_empty_sents_indices]
   d["sentence_IDS"] = [d["sentence_IDS"][i] for i in non_empty_sents_indices]

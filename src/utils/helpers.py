@@ -90,4 +90,8 @@ def get_random_from_list(list, n=None, max_n=None):
     return []
   if not n:
     n = random.randint(1, max_n if max_n else len(list))
-  return random.sample(list, n)
+  return random.sample(list, n if n <= len(list) else len(list))
+
+
+def get_non_empty_indices(list: List[str]):
+  return [i for i, txt in enumerate(list) if len(txt) > 0]

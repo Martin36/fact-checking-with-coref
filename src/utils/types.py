@@ -8,7 +8,7 @@ class FeverDataSample(TypedDict):
   evidence: List[List[List[str]]]
   
 class FeverDataSampleWithEvidenceText(FeverDataSample):
-  evidence_text: List[List[str]]
+  evidence_text: List[List[List[str]]]
 
 
 class DocumentLevelFever(TypedDict):

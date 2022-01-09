@@ -1,9 +1,10 @@
 import pprint, random, torch, utils_package
+import numpy as np
 
 from src.data.dataset import BaseDataset
 from tqdm import tqdm
 
-from src.utils.helpers import create_input_str, get_fever_doc_lines
+from src.utils.helpers import create_input_str, get_fever_doc_lines, get_non_empty_indices, get_random_from_list
 from src.utils.types import FeverDataSample
 from src.utils.constants import label2id
 
@@ -74,26 +75,58 @@ class FEVERDataset(BaseDataset):
       d["evidence_texts"] = self.get_evidence_texts(d)
       yield d
 
+
+  def get_sample_evidence_sents(self, pages, max_n=5):
+    all_sent_id_pairs = []
+    for page in pages:
+      doc_text = self.db.get_doc_lines(page)
+      if not doc_text:
+        continue
+      doc_lines = get_fever_doc_lines(doc_text)
+      sentence_ids = np.arange(len(doc_lines)).tolist()
+      page_name_list = [page] * len(doc_lines)
+      sent_id_page_pairs = zip(doc_lines, sentence_ids, page_name_list)
+      non_empty_sents_indices = get_non_empty_indices(doc_lines)
+      sent_id_pairs = [[sent, sent_id, page] 
+                       for sent, sent_id, page in sent_id_page_pairs 
+                       if sent_id in non_empty_sents_indices]
+      all_sent_id_pairs += sent_id_pairs
+
+    return get_random_from_list(all_sent_id_pairs, max_n=max_n)
   
-  def create_ds_with_evidence_texts(self, out_file):
+  
+  def extract_evidence_from_sample_evidence(self, sample_evidence):
+    return [[[None, None, doc_id, sent_id] 
+             for _, sent_id, doc_id in sample_evidence]]
+
+  def extract_evidence_texts_from_sample_evidence(self, sample_evidence):
+    return [[[doc_id, sent_text] 
+             for sent_text, _, doc_id in sample_evidence]]
+  
+
+  def create_ds_with_evidence_texts(self, out_file, sample_nei=False):      
+    
     for d in tqdm(self.data):
-      d["evidence_texts"] = self.get_evidence_texts(d)
+      if sample_nei and d["verifiable"] == "NOT VERIFIABLE":
+        pages = d["predicted_pages"] if len(d["predicted_pages"]) > 0 else d["wiki_results"]
+        sample_evidence = self.get_sample_evidence_sents(pages)
+        d["evidence"] = self.extract_evidence_from_sample_evidence(sample_evidence)
+        d["evidence_texts"] = self.extract_evidence_texts_from_sample_evidence(sample_evidence)
+      else:        
+        d["evidence_texts"] = self.get_evidence_texts(d)
+    
     utils_package.store_jsonl(self.data, out_file)
     logger.info(f"Stored dataset with evidence in '{out_file}'")
     
       
 if __name__ == "__main__":
   
-  data_file = "data/fever/dev.jsonl"
+  data_file = "data/fever/doc_retrieval/train.wiki7.jsonl"
   db_path = "data/fever/fever.db"
 
   dataset = FEVERDataset(data_file, db_path)
-  
-  random_samples = dataset.get_random_samples_with_text(5)
-  
-  pp.pprint(random_samples)
-  
-  out_file = "data/fever/dev_with_evidence.jsonl"
-  dataset.create_ds_with_evidence_texts(out_file)
+    
+  out_file = "data/fever/train_with_evidence.jsonl"
+  dataset.create_ds_with_evidence_texts(out_file, sample_nei=True)
       
     
