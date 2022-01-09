@@ -1,39 +1,17 @@
 import torch, utils_package
-from src.data.fever_dataset import FEVERDataset
-from src.utils.helpers import calc_accuracy, create_input_str, tensor_dict_to_device
+
 from transformers import DebertaV2Tokenizer, DebertaV2ForSequenceClassification, DebertaTokenizer, DebertaForSequenceClassification
+from transformers import TrainingArguments, Trainer, AdamW
+
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from sklearn.metrics import classification_report
 
+from src.data.fever_dataset import FEVERDataset
+from src.utils.helpers import calc_accuracy, tensor_dict_to_device
+from src.utils.constants import label2id
+
 logger = utils_package.logger.get_logger()
-
-LABEL_2_IDX = {
-  "SUPPORTS": 0, 
-  "REFUTES": 1, 
-  "NOT ENOUGH INFO": 2
-}
-
-IDX_2_LABEL = {
-  0: "SUPPORTS", 
-  1: "REFUTES", 
-  2: "NOT ENOUGH INFO"
-}
-
-# For 'deberta-v2-xlarge-mnli'
-id2label = {
-  0: "CONTRADICTION",
-  1: "NEUTRAL",
-  2: "ENTAILMENT"
-}
-
-# FEVER to 'deberta-v2-xlarge-mnli' mapping
-label2id = {
-  "REFUTES": 0,
-  "NOT ENOUGH INFO": 1,
-  "SUPPORTS": 2
-}
-
 
 class ClaimVerifier():
   
@@ -43,19 +21,37 @@ class ClaimVerifier():
     self.device = device
     self.model.to(device)    
     
+  # TODO: 
+  def train(self, train_dataset, dev_dataset):
+    out_dir = "models/deberta_base_mnli_finetuned"
+    training_args = TrainingArguments(
+      out_dir, 
+      overwrite_output_dir=True, 
+      evaluation_strategy="steps", 
+      eval_steps=100,
+      per_device_train_batch_size=8,
+      per_device_eval_batch_size=8,
+      learning_rate=5e-5,
+      weight_decay=0,
+      num_train_epochs=3,
+      save_strategy="steps",
+      save_steps=500,
+      save_total_limit=10,
+    )
     
-  def predict(self, claim, evidence_texts, label_text):
-    input_str = create_input_str(claim, evidence_texts)
-    inputs = self.tokenizer(input_str, return_tensors="pt")
-    label_idx = label2id[label_text]
-    labels = torch.tensor([label_idx])#.unsqueeze(0)
-    outputs = self.model(**inputs, labels=labels)
-    loss = outputs.loss
-    logits = outputs.logits
-    return loss, logits
+    trainer = Trainer(
+      model=self.model, 
+      args=training_args, 
+      train_dataset=train_dataset, 
+      eval_dataset=dev_dataset
+    )
+    
+    optimizer = AdamW(self.model.parameters(), lr=1e-5)
+    
+    trainer.train()
 
-
-  def predict_batch(self, inputs, labels):
+        
+  def predict(self, inputs, labels):
     with torch.no_grad():
       inputs = tensor_dict_to_device(inputs, self.device)
       labels = torch.squeeze(labels)
@@ -66,7 +62,7 @@ class ClaimVerifier():
 
 
   def convert_logits_to_labels(self, logits):
-    out, idxs = torch.max(logits, dim=1)
+    _, idxs = torch.max(logits, dim=1)
     return idxs.tolist()
     
   
@@ -78,6 +74,7 @@ if __name__ == "__main__":
   
   db_path = "data/fever/fever.db"
   dev_data_path = "data/fever/dev.jsonl"
+  train_data_path = "data/fever/train.jsonl"
   # model_name = "microsoft/deberta-v2-xlarge"
   # model_name = "models/document-level-FEVER/RTE-debertav2-MNLI"
   # model_name = "microsoft/deberta-v2-xlarge-mnli"
@@ -89,16 +86,17 @@ if __name__ == "__main__":
   # tokenizer = DebertaV2Tokenizer.from_pretrained(model_name)
   tokenizer = DebertaTokenizer.from_pretrained(model_name)
 
-  fever_ds = FEVERDataset(dev_data_path, db_path, tokenizer)
+  dev_dataset = FEVERDataset(dev_data_path, db_path, tokenizer)
+  train_dataset = FEVERDataset(train_data_path, db_path, tokenizer)
   
-  dev_dataloader = DataLoader(fever_ds, batch_size=batch_size, shuffle=True)
+  dev_dataloader = DataLoader(dev_dataset, batch_size=batch_size, shuffle=True)
   
   claim_verifier = ClaimVerifier(model_name, device)
   
   pred_labels = []
   gold_labels = []
   for inputs, labels in tqdm(dev_dataloader):    
-    logits = claim_verifier.predict_batch(inputs, labels)    
+    logits = claim_verifier.predict(inputs, labels)    
     pred_labels += claim_verifier.convert_logits_to_labels(logits)
     gold_labels += torch.squeeze(labels).tolist()
     

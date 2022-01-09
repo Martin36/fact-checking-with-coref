@@ -49,6 +49,15 @@ class DocDB(object):
         cursor.close()
         return results
 
+    def get_random_doc_ids(self, n):
+        """Fetches n random ids of docs stored in the db."""
+        cursor = self.connection.cursor()
+        sql = "SELECT id FROM documents ORDER BY RANDOM() LIMIT ?"
+        cursor.execute(sql, (n,))
+        results = [r[0] for r in cursor.fetchall()]
+        cursor.close()
+        return results
+
     def get_doc_text(self, doc_id):
         """Fetch the raw text of the doc for 'doc_id'."""
         cursor = self.connection.cursor()

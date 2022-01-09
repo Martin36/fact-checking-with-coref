@@ -12,7 +12,7 @@ class SentenceRetriever():
     pass
   
   
-  
+# TODO: 
 if __name__ == "__main__":
   
   model_name = "sentence-selection-bigbird-base"

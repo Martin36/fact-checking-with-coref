@@ -1,4 +1,4 @@
-
+import random
 from collections import defaultdict
 from typing import List
 
@@ -63,4 +63,31 @@ def get_evidence_pages(evidence_sents: List[List[str]]):
   doc_titles = set()
   for evi in evidence_sents:
     doc_titles.add(evi[2])
-  return doc_titles
+  return list(doc_titles)
+
+
+def get_random_from_list(list, n=None, max_n=None):
+  """Gets n random element from the provided list
+  
+  Args:
+      list (list): The list to pick elements from
+      
+      n (int, optional): Number of elements to pick. 
+      If not provided, it will pick a random nr of samples from the list. 
+      Defaults to None.
+      
+      max_n (int, optional): Max number of elements to pick. 
+      Prove this if you still want the number of elements to be random,
+      but want to limit the size of the returned list. If n is provided
+      it will override this
+      Defaults to None.
+
+  Returns:
+      list: List of randomly picked elements
+  """
+  
+  if not list or len(list) == 0:
+    return []
+  if not n:
+    n = random.randint(1, max_n if max_n else len(list))
+  return random.sample(list, n)
