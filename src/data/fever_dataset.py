@@ -14,22 +14,32 @@ logger = utils_package.logger.get_logger()
 
 class FEVERDataset(BaseDataset):
   
-  def __init__(self, data_file, db_path, tokenizer=None) -> None:
-    super().__init__(data_file, db_path, tokenizer)
+  def __init__(self, data_file, db_path=None, tokenizer=None) -> None:
+    super().__init__(data_file, tokenizer, db_path=db_path)
+    
+    if "evidence_texts" in self.data[0]:
+      self.has_evidence_texts = True
+    else:
+      self.has_evidence_texts = False
       
 
   def __getitem__(self, idx):
     d = self.data[idx]
-    evidence_texts = self.get_evidence_texts(d)
+    if self.has_evidence_texts:
+      evidence_texts = d["evidence_texts"]
+    else:
+      evidence_texts = self.get_evidence_texts(d)
     input_str = create_input_str(d["claim"], evidence_texts)
     inputs = self.tokenizer(input_str, return_tensors="pt", padding="max_length", truncation=True)
     for key in inputs:
       inputs[key] = torch.squeeze(inputs[key])
     label_idx = label2id[d["label"]]
-    labels = torch.tensor([label_idx])#.unsqueeze(0)
-    return inputs, labels
+    # labels = torch.tensor([label_idx])#.unsqueeze(0)
+    # inputs["labels"] = labels
+    inputs["labels"] = label_idx
+    return inputs
 
-
+  
   def get_sample_by_id(self, id):
     if self.data:
       sample = next((d for d in self.train_data if d["id"] == id), None)
@@ -40,6 +50,10 @@ class FEVERDataset(BaseDataset):
 
 
   def get_evidence_texts(self, d: FeverDataSample):
+    
+    if not self.db:
+      raise RuntimeError("Database need to be provided if no evidence_texts are in the dataset")
+
     evidence_texts = []
     
     for evidence_set in d["evidence"]:
@@ -121,12 +135,12 @@ class FEVERDataset(BaseDataset):
       
 if __name__ == "__main__":
   
-  data_file = "data/fever/doc_retrieval/train.wiki7.jsonl"
+  data_file = "data/fever/doc_retrieval/dev.wiki7.jsonl"
   db_path = "data/fever/fever.db"
 
   dataset = FEVERDataset(data_file, db_path)
     
-  out_file = "data/fever/train_with_evidence.jsonl"
+  out_file = "data/fever/dev_with_evidence.jsonl"
   dataset.create_ds_with_evidence_texts(out_file, sample_nei=True)
       
     

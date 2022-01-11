@@ -8,9 +8,24 @@ from src.lib.document_level_fever.sentence_selection_dataset import FEVERDataset
 
 class SentenceRetriever():
   
-  def __init__(self) -> None:
+  def __init__(self, model) -> None:
+    self.model = model
     pass
   
+  def predict(self, batch):
+    with torch.no_grad():
+      self.model.eval()
+      # predict labels for each token in a document
+      output_i = model(**batch["model_input"]).logits.squeeze()
+      output_i_list = output_i.cpu().tolist()
+      predictions = output_i_list if type(output_i_list[0]) is list else [output_i_list]
+      labels = batch["labels"].cpu().tolist()
+      input_ids = batch["model_input"]["input_ids"].cpu().tolist()
+      pages = batch["pages"]
+      sent_ids = batch["sent_ids"]
+      claim_ids = batch["claim_id"]
+
+    pass
   
 # TODO: 
 if __name__ == "__main__":

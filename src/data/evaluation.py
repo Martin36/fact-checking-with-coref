@@ -54,14 +54,30 @@ def evaluate_doc_retrieval(data: List[DocRetrievalResult], include_nei=False):
   }
   
   return result
+
+# TODO: 
+def evaluate_document_level_fever():
+  pass
   
 if __name__ == "__main__":
   
-  data_file = "data/fever/doc_retrieval/train.wiki7.jsonl"
-  data = load_jsonl(data_file)
+  train_data_file = "data/fever/doc_retrieval/train.wiki7.jsonl"
+  dev_data_file = "data/fever/doc_retrieval/dev.wiki7.jsonl"
   
-  metrics = evaluate_doc_retrieval(data)
+  train_data = load_jsonl(train_data_file)
+  dev_data = load_jsonl(dev_data_file)
   
-  print(metrics)
+  train_metrics = evaluate_doc_retrieval(train_data)
+  dev_metrics = evaluate_doc_retrieval(dev_data)
   
+  print("========== Metrics for training data ==============")
+  for key in train_metrics:
+    print(f"{key}: {train_metrics[key]}")
+  print("\n")
+  
+  print("========== Metrics for dev data ===================")
+  for key in dev_metrics:
+    print(f"{key}: {dev_metrics[key]}")
+  print("\n")
+
   print(stats)
