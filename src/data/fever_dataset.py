@@ -5,7 +5,6 @@ from src.data.dataset import BaseDataset
 from tqdm import tqdm
 
 from src.utils.helpers import create_input_str, get_fever_doc_lines, get_non_empty_indices, get_random_from_list
-from src.utils.types import FeverDataSample
 from src.utils.constants import label2id
 
 pp = pprint.PrettyPrinter(indent=2)
@@ -49,7 +48,7 @@ class FEVERDataset(BaseDataset):
     return None
 
 
-  def get_evidence_texts(self, d: FeverDataSample):
+  def get_evidence_texts(self, d):
     
     if not self.db:
       raise RuntimeError("Database need to be provided if no evidence_texts are in the dataset")

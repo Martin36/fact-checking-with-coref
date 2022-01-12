@@ -3,11 +3,9 @@ from collections import defaultdict
 from utils_package.util_funcs import calc_f1, load_jsonl
 from src.utils.helpers import get_evidence_pages
 
-from src.utils.types import DocRetrievalResult
-
 stats = defaultdict(int)
 
-def evaluate_doc_retrieval(data: List[DocRetrievalResult], include_nei=False):
+def evaluate_doc_retrieval(data: List[dict], include_nei=False):
   
   accuracy, precision, recall, f1 = 0, 0, 0, 0
   

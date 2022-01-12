@@ -9,7 +9,6 @@ from utils_package.logger import get_logger
 
 from src.data.doc_db import DocDB
 from src.utils.helpers import get_evidence_pages, get_fever_doc_lines, get_non_empty_indices, get_random_from_list
-from src.utils.types import DocRetrievalResult, DocumentLevelFever
 
 logger = get_logger()
 
@@ -17,7 +16,7 @@ pages_not_found = set()
 stats = defaultdict(int)
     
 
-def filter_empty_sents(d: DocumentLevelFever):
+def filter_empty_sents(d):
   non_empty_sents_indices = get_non_empty_indices(d["sentences"])
   d["sentences"] = [d["sentences"][i] for i in non_empty_sents_indices]
   d["label_list"] = [d["label_list"][i] for i in non_empty_sents_indices]
@@ -29,7 +28,7 @@ class DocumentLevelFeverPreprocessor():
   
   def __init__(self, db_path, retrieved_docs_file):
     self.db = DocDB(db_path=db_path)
-    self.retrieved_docs_data: List[DocRetrievalResult] = load_jsonl(
+    self.retrieved_docs_data = load_jsonl(
       retrieved_docs_file
     )
     
@@ -62,7 +61,7 @@ class DocumentLevelFeverPreprocessor():
       gold_sent_indexes = [evidence[3] for evidence in evidence_sents 
                           if evidence[2] == page]
 
-    res_obj = DocumentLevelFever()
+    res_obj = dict()
     res_obj["id"] = id
     res_obj["claim"] = claim
     res_obj["page"] = page
@@ -109,7 +108,7 @@ class DocumentLevelFeverPreprocessor():
         
     return result
   
-  def create_data_from_gold_evidence(self) -> List[DocumentLevelFever]:
+  def create_data_from_gold_evidence(self) -> List[dict]:
     result = []
     for d in data:
       # Skip the NEI samples since these don't have any evidence to retrieve
