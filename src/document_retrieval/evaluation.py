@@ -53,9 +53,6 @@ def evaluate_doc_retrieval(data: List[dict], include_nei=False):
   
   return result
 
-# TODO: 
-def evaluate_document_level_fever():
-  pass
   
 if __name__ == "__main__":
   

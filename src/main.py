@@ -1,12 +1,8 @@
-import spacy
 import pprint
 # from util_funcs import load_jsonl
 from utils_package import util_funcs
 
 pp = pprint.PrettyPrinter(indent=2)
-
-spacy.prefer_gpu()
-nlp = spacy.load("en_core_web_trf")
 
 dev_path = "data/fever/dev.jsonl"
 dev_data = util_funcs.load_jsonl(dev_path)
