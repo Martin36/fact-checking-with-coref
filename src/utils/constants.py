@@ -1,15 +1,20 @@
 
 # FEVER to 'deberta-v2-xlarge-mnli' mapping
-# TODO: Rename this
-label2id = {
+FEVER_LABEL_2_ID = {
   "REFUTES": 0,
   "NOT ENOUGH INFO": 1,
   "SUPPORTS": 2
 }
 
+FEVER_ID_2_LABEL = {
+  0: "REFUTES",
+  1: "NOT ENOUGH INFO",
+  2: "SUPPORTS"
+}
+
+
 # For 'deberta-v2-xlarge-mnli'
-# TODO: Rename this
-id2label = {
+DEBERTA_MNLI_LABEL_2_ID = {
   0: "CONTRADICTION",
   1: "NEUTRAL",
   2: "ENTAILMENT"

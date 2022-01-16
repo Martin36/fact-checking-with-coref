@@ -1,22 +1,14 @@
 from collections import defaultdict
-from ast import literal_eval
 from tqdm import tqdm
 import os
 from utils_package.util_funcs import load_jsonl, calc_f1, store_json
 import pandas as pd
 
 from src.utils.enums import FeverLabels
-
+from src.utils.dlf_helpers import get_predicted_sentences
 
 stats = defaultdict(int)
 
-def get_predicted_sentences(df):
-  pred_sents = []
-  for _, row in df.iterrows():
-    if row["y"] == 1:
-      sent_tuple = literal_eval(row["page_sentence"])
-      pred_sents.append(sent_tuple)
-  return pred_sents
 
 
 def evaluate_document_level_fever(labelled_data_file: str, 

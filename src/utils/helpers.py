@@ -1,7 +1,12 @@
+import os
 import random
 from collections import defaultdict
 from typing import List
+from utils_package.logger import get_logger
 
+from src.data.doc_db import DocDB
+
+logger = get_logger()
 
 stats = defaultdict(int)
 
@@ -95,3 +100,55 @@ def get_random_from_list(list, n=None, max_n=None):
 
 def get_non_empty_indices(list: List[str]):
   return [i for i, txt in enumerate(list) if len(txt) > 0]
+
+
+def get_evidence_texts(db: DocDB, d: dict):
+  """Gets the actual text of the evidence
+
+  Args:
+      db (DocDB): The database where the documents are located
+      d (dict): A dict that has "evidence" as one of its properties. 
+      Evidence should be on the form [_, _, doc_title, sentence_id]
+
+  Returns:
+      List[str]: A list of the texts of the provided evidence sentences
+  """
+
+  evidence_texts = []
+  
+  for evidence_set in d["evidence"]:
+    evidence_set_texts = []
+    
+    for evidence in evidence_set:
+      if len(evidence) == 0:
+        continue
+      doc_id = evidence[2]
+      sent_id = evidence[3]
+      
+      if not doc_id: 
+        break
+      
+      doc_lines_text = db.get_doc_lines(doc_id)
+      doc_lines = get_fever_doc_lines(doc_lines_text)
+      
+      evidence_set_texts.append([doc_id, doc_lines[sent_id]])
+
+    evidence_texts.append(evidence_set_texts)
+    
+  return evidence_texts
+  
+# TODO: Move this to be part of utils_package, and perhaps be used by default on store_json/jsonl?
+def create_dirs_if_not_exist(path: str):
+  """Create the directory where the path points to.
+    Does nothing if the dir already exists
+
+  Args:
+      path (str): Either a path to a directory or a file
+  """
+  
+  dir = os.path.dirname(path)
+  if not os.path.exists(dir):
+    os.makedirs(dir)
+    logger.info(f"Created directory '{dir}'")
+
+  
