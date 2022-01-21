@@ -57,5 +57,19 @@
         // "--parallel=False",
       ]
     },
+    {
+      "name": "Test: Preprocess Document Level FEVER data",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/data/dlf_preprocessing.py",
+      "console": "integratedTerminal",
+      "env": {"PYTHONPATH":"${workspaceRoot}"},  // modify PYTHONPATH
+      "args": [
+        "--retrieved_docs_file=data/fever/test/test.wiki7.jsonl",
+        "--pages_not_found_file=data/fever/test/documents_not_found.json",
+        "--out_file=data/fever/test/test_dlf.jsonl",
+      ]
+    },
+
   ]
 }

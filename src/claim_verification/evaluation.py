@@ -6,11 +6,13 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader
 from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
-from utils_package.util_funcs import store_json, load_jsonl
-from src.claim_verification.claim_verifier import ClaimVerifier
+from utils_package.util_funcs import store_json, load_jsonl, store_jsonl
 
+from lib.fever.scorer import fever_score
+
+from src.claim_verification.claim_verifier import ClaimVerifier
 from src.data.fever_dataset import FEVERDataset
-from src.utils.helpers import calc_accuracy, create_dirs_if_not_exist, tensor_dict_to_device
+from src.utils.helpers import create_dirs_if_not_exist
 from src.utils.constants import FEVER_ID_2_LABEL, FEVER_LABEL_2_ID
 
 logger = utils_package.logger.get_logger()
@@ -39,18 +41,21 @@ def compute_metrics(p):
 
 
 def extract_title_id_pairs_from_evidence(evidence):
+  if len(evidence) == 0: return evidence
   return [[doc_title, sent_id] for _, _, doc_title, sent_id in evidence]
 
 
-# TODO: Test this
 def create_predicitions_data(pred_labels, labelled_data, prediction_data):
+  
+  labelled_data = labelled_data[:8]
+  prediction_data = prediction_data[:8]
   
   for d_labelled, d_prediction, label_id in zip(labelled_data, prediction_data, pred_labels):
     d_labelled["predicted_label"] = FEVER_ID_2_LABEL[label_id]
-    d_labelled["predicted_evidence"] = extract_title_id_pairs_from_evidence(d_prediction["evidence"])
+    first_evidence_set = d_prediction["evidence"][0]
+    d_labelled["predicted_evidence"] = extract_title_id_pairs_from_evidence(first_evidence_set)
 
   return labelled_data
-
     
 
 def predict(claim_verifier, dataset, metrics_save_file=None, 
@@ -72,24 +77,39 @@ def predict(claim_verifier, dataset, metrics_save_file=None,
   print("==============================================")
   print()  
   
-  accuracy = calc_accuracy(pred_labels, gold_labels)
-  logger.info(f"Accuracy for model '{model_name}' on dev set is: {accuracy}")
-
   labels = list(FEVER_LABEL_2_ID.keys())
   cls_report = classification_report(gold_labels, pred_labels, target_names=labels)
   print(cls_report)
   
+  predictions = create_predicitions_data(
+    pred_labels, labelled_data, dataset.data)
+  strict_score, label_accuracy, precision, recall, f1 = fever_score(predictions)
+  print("============ FEVER Score =====================")
+  print(f"Strict score: {strict_score}")
+  print(f"Label accuracy: {label_accuracy}")
+  print(f"Precision: {precision}")
+  print(f"Recall: {recall}")
+  print(f"F1: {f1}")
+  print("==============================================")
+  print()
+  
+  metrics["fever"] = {
+    "strict_score": strict_score,
+    "label_accuracy": label_accuracy,
+    "precision": precision,
+    "recall": recall,
+    "f1": f1
+  }
+  
   if metrics_save_file:
     create_dirs_if_not_exist(metrics_save_file)
     store_json(metrics, metrics_save_file, indent=2)
-    print(f"Saved results in '{metrics_save_file}'")
+    print(f"Saved metrics in '{metrics_save_file}'")
     
   if predictions_save_file:
-    # TODO
-    predictions_data = create_predicitions_data(pred_labels, )
-    create_dirs_if_not_exist(metrics_save_file)
-    store_json(metrics, metrics_save_file, indent=2)
-    print(f"Saved results in '{metrics_save_file}'")
+    create_dirs_if_not_exist(predictions_save_file)
+    store_jsonl(predictions, predictions_save_file)
+    print(f"Saved predictions in '{predictions_save_file}'")
     
     
 if __name__ == "__main__":
@@ -118,9 +138,11 @@ if __name__ == "__main__":
   claim_verifier = ClaimVerifier(model, device, 
                                  save_model_after_steps=1)
   
-  save_file = "data/fever/claim_verification/deberta_base_mnli_finetined-ckpt_6000-dlf_predictions.json"
+  metrics_save_file = "data/fever/claim_verification/deberta_base_mnli_finetined-ckpt_6000-dlf_metrics.json"
+  predictions_save_file = "data/fever/claim_verification/deberta_base_mnli_finetined-ckpt_6000-dlf_predictions.jsonl"
   labelled_data = load_jsonl(labelled_data_path)
-  predict(claim_verifier, dev_dataset, save_file)
+  predict(claim_verifier, dev_dataset, metrics_save_file, 
+          predictions_save_file)
   
   # claim_verifier.train(train_dataset, dev_dataset)
   
