@@ -70,6 +70,31 @@
         "--out_file=data/fever/test/test_dlf.jsonl",
       ]
     },
+    {
+      "name": "Dev: Claim verification evaluation",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/claim_verification/evaluation.py",
+      "console": "integratedTerminal",
+      "env": {"PYTHONPATH":"${workspaceRoot}"},  // modify PYTHONPATH
+      "args": [
+        "--sent_retr_data_path=data/fever/dev_with_dlf.jsonl",
+        "--labelled_data_path=data/fever/dev.jsonl",
+        "--output_folder=data/fever/dev/",
+      ]
+    },
+    {
+      "name": "Test: Claim verification evaluation",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/claim_verification/evaluation.py",
+      "console": "integratedTerminal",
+      "env": {"PYTHONPATH":"${workspaceRoot}"},
+      "args": [
+        "--sent_retr_data_path=data/fever/test/test_with_dlf.jsonl",
+        "--predictions_save_path=data/fever/test/deberta_base_mnli_finetined-ckpt_6000-dlf_predictions.jsonl",
+      ]
+    },
 
   ]
 }

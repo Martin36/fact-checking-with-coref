@@ -1,18 +1,11 @@
 import torch, utils_package
 
-from transformers import DebertaV2Tokenizer, DebertaV2ForSequenceClassification, DebertaTokenizer, DebertaForSequenceClassification
 from transformers import AdamW
-
 from tqdm import tqdm
 from torch.utils.data import DataLoader
 from torch.autograd.grad_mode import no_grad
-from sklearn.metrics import classification_report
-from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
-from utils_package.util_funcs import store_json, load_jsonl
 
-from src.data.fever_dataset import FEVERDataset
-from src.utils.helpers import calc_accuracy, create_dirs_if_not_exist, tensor_dict_to_device
-from src.utils.constants import FEVER_ID_2_LABEL, FEVER_LABEL_2_ID
+from src.utils.helpers import tensor_dict_to_device
 
 logger = utils_package.logger.get_logger()
 

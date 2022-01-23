@@ -35,9 +35,12 @@ def merge_with_fever_data(labelled_data_file: str,
   
 if __name__ == "__main__":
   db_path = "data/fever/fever.db"
-  labelled_data_file = "data/fever/dev.jsonl"
-  output_data_file = "data/fever/predictions_sentence_retrieval.csv"
-  results_file = "data/fever/dev_with_dlf.jsonl"
+  # labelled_data_file = "data/fever/dev.jsonl"
+  # output_data_file = "data/fever/predictions_sentence_retrieval.csv"
+  # results_file = "data/fever/dev_with_dlf.jsonl"
+  labelled_data_file = "data/fever/test.jsonl"
+  output_data_file = "data/fever/test/test_sentence_retrieval_dlf.csv"
+  results_file = "data/fever/test/test_with_dlf.jsonl"
   
   merged_data = merge_with_fever_data(labelled_data_file, 
                                       output_data_file, 

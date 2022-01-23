@@ -25,8 +25,12 @@ class FEVERDataset(BaseDataset):
     if "evidence_texts" in self.data[0]:
       self.has_evidence_texts = True
     else:
-      self.has_evidence_texts = False
-      
+      self.has_evidence_texts = False      
+    if "label" in self.data[0]:
+      self.has_labels = True
+    else:
+      self.has_labels = False
+
 
   def __getitem__(self, idx):
     d = self.data[idx]
@@ -38,10 +42,11 @@ class FEVERDataset(BaseDataset):
     inputs = self.tokenizer(input_str, return_tensors="pt", padding="max_length", truncation=True)
     for key in inputs:
       inputs[key] = torch.squeeze(inputs[key])
-    label_idx = FEVER_LABEL_2_ID[d["label"]]
-    # labels = torch.tensor([label_idx])#.unsqueeze(0)
-    # inputs["labels"] = labels
-    inputs["labels"] = label_idx
+    if self.has_labels:
+      label_idx = FEVER_LABEL_2_ID[d["label"]]
+      # labels = torch.tensor([label_idx])#.unsqueeze(0)
+      # inputs["labels"] = labels
+      inputs["labels"] = label_idx
     return inputs
 
 

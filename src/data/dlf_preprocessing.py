@@ -3,7 +3,6 @@ from collections import defaultdict
 import random
 import numpy as np
 
-from typing import List
 from tqdm import tqdm
 from utils_package.util_funcs import load_jsonl, store_json, store_jsonl
 from utils_package.logger import get_logger
