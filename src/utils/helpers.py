@@ -59,9 +59,24 @@ def calc_accuracy(pred_labels, gold_labels):
   return accuracy
 
 
+# def get_fever_doc_lines(doc_text):
+#   return [doc_line.split("\t")[1] if len(doc_line.split("\t")[1]) > 1 else "" for doc_line in
+#             doc_text.split("\n")]
+
+
 def get_fever_doc_lines(doc_text):
-  return [doc_line.split("\t")[1] if len(doc_line.split("\t")[1]) > 1 else "" for doc_line in
-            doc_text.split("\n")]
+  result = []
+  doc_lines = doc_text.split("\n")
+  for doc_line in doc_lines:
+    if len(doc_line) == 0:
+      continue
+    doc_line_split = doc_line.split("\t")
+    if len(doc_line_split[1]) > 1:
+      result.append(doc_line_split[1])
+    else:
+      result.append("")
+  return result
+
 
 
 def get_evidence_pages(evidence_sents: List[List[str]]):
@@ -137,18 +152,6 @@ def get_evidence_texts(db: DocDB, d: dict):
     
   return evidence_texts
   
-# TODO: Move this to be part of utils_package, and perhaps be used by default on store_json/jsonl?
-def create_dirs_if_not_exist(path: str):
-  """Create the directory where the path points to.
-    Does nothing if the dir already exists
 
-  Args:
-      path (str): Either a path to a directory or a file
-  """
-  
-  dir = os.path.dirname(path)
-  if not os.path.exists(dir):
-    os.makedirs(dir)
-    logger.info(f"Created directory '{dir}'")
-
-  
+def filter_empty(list: List[str]):
+  return [elem for elem in list if len(elem) > 0]

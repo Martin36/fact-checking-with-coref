@@ -12,7 +12,7 @@ from utils_package.util_funcs import store_json, load_jsonl, store_jsonl
 from lib.fever.scorer import fever_score
 
 from src.claim_verification.claim_verifier import ClaimVerifier
-from src.data.fever_dataset import FEVERDataset
+from src.data.fever.dataset import FEVERDataset
 from src.utils.constants import FEVER_ID_2_LABEL, FEVER_LABEL_2_ID
 
 logger = utils_package.logger.get_logger()

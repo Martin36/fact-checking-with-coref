@@ -1,6 +1,6 @@
 import unittest
 
-from src.data.hover_preprocessing import escape_single_quotes, remove_hyperlinks
+from src.data.hover.preprocessing import escape_single_quotes, remove_hyperlinks
 
 class TestHoverPreprocessing(unittest.TestCase):
   

@@ -1,6 +1,6 @@
 import pprint
 
-from src.data.fever_dataset import FEVERDataset
+from src.data.fever.dataset import FEVERDataset
 
 pp = pprint.PrettyPrinter(indent=2)
 
