@@ -45,7 +45,7 @@ def calculate_wiki_doc_sentence_lengths(db_path):
   return doc_lengths
   
   
-def get_list_of_long_docs(db_path, length_threshold):
+def get_list_of_long_docs(db_path, length_threshold=1000):
   db = DocDB(db_path)
   doc_ids = db.get_doc_ids()
   long_docs_list = []
@@ -58,13 +58,33 @@ def get_list_of_long_docs(db_path, length_threshold):
     doc_lines = filter_empty(doc_lines)
     nr_of_sents = len(doc_lines)
     
-    if nr_of_sents > 1000:
+    if nr_of_sents > length_threshold:
       long_docs_list.append({
         "doc_id": doc_id,
         "nr_of_sents": nr_of_sents
       })
   
   return long_docs_list
+
+
+def calculate_evidence_length_distribution(data_path):
+  data = load_jsonl(data_path)
+  evidence_length_counts = defaultdict(int)
+  
+  for d in data:
+    if d["verifiable"] == "NOT VERIFIABLE":
+      continue
+    
+    # Using the shortest evidence set      
+    shortest_evidence_set_len = float("inf")
+    for evidence_set in d["evidence"]:
+      evidence_set_len = len(evidence_set)
+      if evidence_set_len < shortest_evidence_set_len:
+        shortest_evidence_set_len = evidence_set_len
+    
+    evidence_length_counts[shortest_evidence_set_len] += 1
+    
+  return evidence_length_counts
 
 
 
@@ -76,6 +96,7 @@ if __name__ == "__main__":
   sent_idx_counts_file = "data/fever/stats/train_sent_idx_counts.json"
   doc_length_counts_file = "data/fever/stats/doc_length_counts.json"
   long_docs_file = "data/fever/stats/long_docs.json"
+  evidence_len_dist_file = "data/fever/stats/evidence_length_distribution.json"
 
   if not os.path.isfile(sent_idx_counts_file):
     sent_idx_counts = calculate_sentence_index_distribution(train_data_path)
@@ -98,3 +119,10 @@ if __name__ == "__main__":
     logger.info(f"Stored long docs in '{long_docs_file}'")
   else:
     logger.info(f"Long docs already exists in '{long_docs_file}'")
+
+  if not os.path.isfile(evidence_len_dist_file):
+    evidence_length_counts = calculate_evidence_length_distribution(train_data_path)
+    store_json(evidence_length_counts, evidence_len_dist_file, sort_keys=True)
+    logger.info(f"Stored evidence length counts in '{evidence_len_dist_file}'")
+  else:
+    logger.info(f"Evidence length counts already exists in '{evidence_len_dist_file}'")
