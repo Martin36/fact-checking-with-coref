@@ -14,33 +14,45 @@
       "justMyCode": false
     },
     {
-      // TODO: Fix and test this
       "name": "Train: Retrieve documents",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/src/athene/retrieval/document/docment_retrieval.py",
+      "program": "${workspaceFolder}/lib/ukp_athene/docment_retrieval.py",
       "console": "integratedTerminal",
       "args": [
-        "--db-file=/home/martin/fever-2018-team-athene/data/fever/fever.db",
-        "--in-file=/home/martin/fever-2018-team-athene/data/fever-data/train.jsonl",
-        "--out-file=/home/martin/fever-2018-team-athene/data/fever/train.wiki3.jsonl",
+        "--db-file=data/fever/fever.db",
+        "--in-file=data/fever/train.jsonl",
+        "--out-file=data/fever/doc_retrieval/ukp/train.wiki3.jsonl",
         "--k-wiki=3",
-        "--parallel=False",
-
+        // "--parallel=False",
       ]
     },
     {
-      // TODO: Fix and test this
       "name": "Dev: Retrieve documents",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/src/athene/retrieval/document/docment_retrieval.py",
+      "program": "${workspaceFolder}/lib/ukp_athene/docment_retrieval.py",
       "console": "integratedTerminal",
       "args": [
-        "--db-file=/home/martin/fever-2018-team-athene/data/fever/fever.db",
-        "--in-file=/home/martin/fever-2018-team-athene/data/fever-data/dev.jsonl",
-        "--out-file=/home/martin/fever-2018-team-athene/data/fever/dev.wiki3.jsonl",
+        "--db-file=data/fever/fever.db",
+        "--in-file=data/fever/dev.jsonl",
+        "--out-file=data/fever/doc_retrieval/ukp/dev.wiki3.jsonl",
         "--k-wiki=3",
+        // "--parallel=False",
+      ]
+    },
+    {
+      "name": "Dev: Retrieve documents (HoVer)",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/lib/ukp_athene/docment_retrieval.py",
+      "console": "integratedTerminal",
+      "args": [
+        "--db-file=data/hover/wiki_with_lines.db",
+        "--in-file=data/hover/dev_fever_format.jsonl",
+        "--out-file=data/hover/doc_retrieval/ukp/dev.wiki3.jsonl",
+        "--k-wiki=3",
+        "--is-hover=True",
         // "--parallel=False",
       ]
     },

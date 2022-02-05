@@ -11,8 +11,8 @@ from allennlp.predictors import Predictor
 from drqa.retriever.utils import normalize
 from tqdm import tqdm
 
-from common.dataset.reader import JSONLineReader
-from retrieval.fever_doc_db import FeverDocDB
+from reader import JSONLineReader
+from fever_doc_db import FeverDocDB
 
 
 def processed_line(method, line):
@@ -38,7 +38,7 @@ def process_line_with_progress(method, line, progress=None):
 
 class Doc_Retrieval:
 
-    def __init__(self, database_path, add_claim=False, k_wiki_results=None):
+    def __init__(self, database_path, add_claim=False, k_wiki_results=None, is_hover=False):
         self.db = FeverDocDB(database_path)
         self.add_claim = add_claim
         self.k_wiki_results = k_wiki_results
@@ -46,6 +46,7 @@ class Doc_Retrieval:
         self.tokenizer = nltk.word_tokenize
         self.predictor = Predictor.from_path(
             "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo-constituency-parser-2018.03.14.tar.gz")
+        self.is_hover = is_hover
 
     def get_NP(self, tree, nps):
 
@@ -133,14 +134,17 @@ class Doc_Retrieval:
         noun_phrases = set(noun_phrases)
         predicted_pages = []
         for np in noun_phrases:
-            page = np.replace('( ', '-LRB-')
-            page = page.replace(' )', '-RRB-')
-            page = page.replace(' - ', '-')
-            page = page.replace(' :', '-COLON-')
-            page = page.replace(' ,', ',')
-            page = page.replace(" 's", "'s")
-            page = page.replace(' ', '_')
-
+            if not self.is_hover:
+                page = np.replace('( ', '-LRB-')
+                page = page.replace(' )', '-RRB-')
+                page = page.replace(' - ', '-')
+                page = page.replace(' :', '-COLON-')
+                page = page.replace(' ,', ',')
+                page = page.replace(" 's", "'s")
+                page = page.replace(' ', '_')
+            else:
+                page = np
+            
             if len(page) < 1:
                 continue
             doc_lines = self.db.get_doc_lines(page)
@@ -190,9 +194,9 @@ def get_map_function(parallel, p=None):
     return p.imap_unordered if parallel else map
 
 
-def main(db_file, k_wiki, in_file, out_file, add_claim=True, parallel=True):
+def main(db_file, k_wiki, in_file, out_file, add_claim=True, parallel=True, is_hover=False):
     # tfidf_path = "data/index/fever-tfidf-ngram=2-hash=16777216-tokenizer=simple.npz"
-    method = Doc_Retrieval(database_path=db_file, add_claim=add_claim, k_wiki_results=k_wiki)
+    method = Doc_Retrieval(database_path=db_file, add_claim=add_claim, k_wiki_results=k_wiki, is_hover=is_hover)
     processed = dict()
     path = os.getcwd()
     jlr = JSONLineReader()
@@ -230,6 +234,7 @@ if __name__ == "__main__":
     parser.add_argument('--k-wiki', type=int, help="first k pages for wiki search")
     parser.add_argument('--parallel', type=bool, default=True)
     parser.add_argument('--add-claim', type=bool, default=True)
+    parser.add_argument('--is-hover', type=bool, default=False)
     args = parser.parse_args()
 
-    main(args.db_file, args.k_wiki, args.in_file, args.out_file, args.add_claim, args.parallel)
+    main(args.db_file, args.k_wiki, args.in_file, args.out_file, args.add_claim, args.parallel, args.is_hover)
