@@ -1,3 +1,4 @@
+import argparse
 from typing import List
 from collections import defaultdict
 from utils_package.util_funcs import calc_f1, load_jsonl
@@ -56,23 +57,17 @@ def evaluate_doc_retrieval(data: List[dict], include_nei=False):
   
 if __name__ == "__main__":
   
-  train_data_file = "data/fever/doc_retrieval/train.wiki7.jsonl"
-  dev_data_file = "data/fever/doc_retrieval/dev.wiki7.jsonl"
+  parser = argparse.ArgumentParser()
+  parser.add_argument('--data-file', type=str, help="The file containing the document retrieval data to be evaluated")
+  args = parser.parse_args()
   
-  train_data = load_jsonl(train_data_file)
-  dev_data = load_jsonl(dev_data_file)
+  data = load_jsonl(args.data_file)
   
-  train_metrics = evaluate_doc_retrieval(train_data)
-  dev_metrics = evaluate_doc_retrieval(dev_data)
+  metrics = evaluate_doc_retrieval(data)
   
-  print("========== Metrics for training data ==============")
-  for key in train_metrics:
-    print(f"{key}: {train_metrics[key]}")
+  print("========== Metrics for data ==============")
+  for key in metrics:
+    print(f"{key}: {metrics[key]}")
   print("\n")
   
-  print("========== Metrics for dev data ===================")
-  for key in dev_metrics:
-    print(f"{key}: {dev_metrics[key]}")
-  print("\n")
-
   print(stats)

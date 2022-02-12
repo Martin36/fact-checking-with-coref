@@ -50,23 +50,32 @@
       "args": [
         "--db-file=data/hover/wiki_with_lines.db",
         "--in-file=data/hover/dev_fever_format.jsonl",
-        "--out-file=data/hover/doc_retrieval/ukp/dev.wiki3.jsonl",
-        "--k-wiki=3",
+        "--out-file=data/hover/doc_retrieval/ukp/dev.wiki7.jsonl",
+        "--k-wiki=7",
         "--is-hover=True",
         // "--parallel=False",
       ]
     },
     {
-      "name": "Dev: Eval Document Retrieval",
+      "name": "Dev: Eval Document Retrieval (FEVER)",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/src/evaluation.py",
+      "program": "${workspaceFolder}/src/document_retrieval/evaluation.py",
       "console": "integratedTerminal",
+      "env": {"PYTHONPATH":"${workspaceRoot}"},  // modify PYTHONPATH
       "args": [
-        "--in-file=data/fever/dev.wiki3.jsonl",
-        "--out-file=data/fever/dev.wiki3.eval.json",
-        "--type=document_retrieval"
-        // "--parallel=False",
+        "--data-file=data/fever/doc_retrieval/dev.wiki7.jsonl",
+      ]
+    },
+    {
+      "name": "Dev: Eval Document Retrieval (HoVer)",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/document_retrieval/evaluation.py",
+      "console": "integratedTerminal",
+      "env": {"PYTHONPATH":"${workspaceRoot}"},
+      "args": [
+        "--data-file=data/hover/doc_retrieval/ukp/dev.wiki7.jsonl",
       ]
     },
     {
