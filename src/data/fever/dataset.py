@@ -39,7 +39,8 @@ class FEVERDataset(BaseDataset):
     else:
       evidence_texts = get_evidence_texts(self.db, d)
     input_str = create_input_str(d["claim"], evidence_texts)
-    inputs = self.tokenizer(input_str, return_tensors="pt", padding="max_length", truncation=True)
+    inputs = self.tokenizer(input_str, return_tensors="pt", 
+                            padding="max_length", truncation=True)
     for key in inputs:
       inputs[key] = torch.squeeze(inputs[key])
     if self.has_labels:
