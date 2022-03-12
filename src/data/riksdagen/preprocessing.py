@@ -36,6 +36,8 @@ def create_sentences_table(data):
             "sent_sv": sent_sv,
             "sent_en": sent_en,
             "sent_idx": j,
+            "paragraph_text_sv": p_sv,
+            "paragraph_text_en": p_en,
             "paragraph_idx": i
           }
           result_objs.append(result_obj)
@@ -49,6 +51,8 @@ def create_sentences_table(data):
             "sent_sv": sent_sv,
             "sent_en": sent_en,
             "sent_idx": j,
+            "paragraph_text_sv": p_sv,
+            "paragraph_text_en": p_en,
             "paragraph_idx": i
           }
           

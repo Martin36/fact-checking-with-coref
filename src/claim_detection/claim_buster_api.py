@@ -10,28 +10,33 @@ multiple_endpoint = "score/text/sentences/"
 request_headers = {"x-api-key": API_KEY}
 
 
-data_file = "data/riksdagen/partiledardebatt-22-01-12.csv"
-df = pd.read_csv(data_file)
+def create_data_with_predictions(df: pd.DataFrame, out_file: str):
+  predictions = []
 
-results = []
-input = ""
-nr_of_samples = 50
-df_sample = df.sample(nr_of_samples)
+  for _, row in tqdm(df.iterrows(), total=len(df)):
+    text = row["sent_en"]
+    api_endpoint = api_base_url + single_endpoint + text
+    response = requests.get(url=api_endpoint, headers=request_headers)
+    res_body = response.json()
+    if len(res_body["results"]) > 1:
+      print(res_body)
+    predictions.append(res_body["results"][0]["score"])
 
-for idx, row in tqdm(df_sample.iterrows(), total=len(df_sample)):
-  text = row["sent_en"]
-  api_endpoint = api_base_url + single_endpoint + text
-  response = requests.get(url=api_endpoint, headers=request_headers)
-  res_body = response.json()
-  if len(res_body["results"]) > 1:
-    print(res_body)
-  results.append({
-    "text_en": text,
-    "text_sv": row["sent_sv"],
-    "speaker": row["speaker"],
-    "score": res_body["results"][0]["score"]
-  })
+  df_predictions = pd.DataFrame(predictions, columns=['prediction'])
+  
+  df = pd.concat([df, df_predictions], axis=1)
+  print(df.head())
+  df.to_csv(out_file)
 
-out_file = "data/riksdagen/partiledardebatt-labeled-sample-22-01-12.csv"
-df_results = pd.DataFrame(results)
-df_results.to_csv(out_file)
+
+def create_sample_data_with_predictions(df: pd.DataFrame, out_file: str, 
+                                        sample_size=50):
+  df_sample = df.sample(sample_size)
+  create_data_with_predictions(df_sample, out_file)
+  
+
+if __name__ == "__main__":
+  data_file = "data/riksdagen/partiledardebatt-numerical-22-01-12-labeled.csv"
+  out_file = "data/riksdagen/partiledardebatt-numerical-22-01-12-labeled-with-predictions.csv"
+  df = pd.read_csv(data_file)
+  create_data_with_predictions(df, out_file)
